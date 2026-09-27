@@ -1,0 +1,11 @@
+.venv
+.git
+.env
+data
+.dagster_home
+**/__pycache__
+.pytest_cache
+.ruff_cache
+dbt/oncoinsight/target
+dbt/oncoinsight/logs
+infra/terraform/.terraform
