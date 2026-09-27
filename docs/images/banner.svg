@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="OncoInsight - breast cancer treatment and outcomes intelligence">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d366b"/>
+      <stop offset="0.45" stop-color="#2a78d6"/>
+      <stop offset="0.8" stop-color="#4a3aa7"/>
+      <stop offset="1" stop-color="#e87ba4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="300" rx="24" fill="url(#g)"/>
+  <!-- stylised patient journey: diagnosis -> surgery -> chemo -> radiation -> endocrine -> outcome -->
+  <g opacity="0.95">
+    <path d="M760 205 C 820 205, 840 150, 900 150 S 980 205, 1040 205 S 1110 150, 1150 150" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3" fill="none"/>
+    <circle cx="760" cy="205" r="13" fill="#ffffff"/>
+    <circle cx="830" cy="170" r="11" fill="#2a78d6" stroke="#fff" stroke-width="3"/>
+    <circle cx="900" cy="150" r="11" fill="#eb6834" stroke="#fff" stroke-width="3"/>
+    <circle cx="970" cy="185" r="11" fill="#1baf7a" stroke="#fff" stroke-width="3"/>
+    <circle cx="1040" cy="205" r="11" fill="#eda100" stroke="#fff" stroke-width="3"/>
+    <circle cx="1100" cy="165" r="11" fill="#e87ba4" stroke="#fff" stroke-width="3"/>
+    <circle cx="1150" cy="150" r="13" fill="#0ca30c" stroke="#fff" stroke-width="3"/>
+  </g>
+  <text x="56" y="92" fill="#ffffff" fill-opacity="0.85" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="16" letter-spacing="3">BREAST CANCER TREATMENT &amp; OUTCOMES INTELLIGENCE</text>
+  <text x="54" y="160" fill="#ffffff" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="68" font-weight="700">OncoInsight</text>
+  <text x="56" y="206" fill="#ffffff" fill-opacity="0.93" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22">Measuring the whole cancer care journey on real patient data:</text>
+  <text x="56" y="238" fill="#ffffff" fill-opacity="0.93" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22">delays · pathways · survival · recurrence · cost · equity</text>
+</svg>
