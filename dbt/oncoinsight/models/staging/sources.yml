@@ -1,0 +1,61 @@
+version: 2
+
+sources:
+  - name: fhir
+    description: >
+      FHIR R4 resources generated from the NCI GDC TCGA-BRCA clinical API, validated against the R4B schema,
+      flattened with Polars and quality-gated with Great Expectations before landing here.
+    schema: raw
+    loaded_at_field: _loaded_at
+    freshness:
+      warn_after: {count: 8, period: day}
+      error_after: {count: 35, period: day}
+    tables:
+      - name: fhir_patient
+        description: FHIR Patient (one per TCGA-BRCA case)
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+      - name: fhir_organization
+        description: FHIR Organization - TCGA tissue source site (contributing hospital or biorepository)
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+      - name: fhir_condition
+        description: FHIR Condition - breast cancer diagnoses (index primary and prior primaries)
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+      - name: fhir_observation
+        description: FHIR Observation - AJCC stage/TNM, lymph nodes, ER/PR/HER2, disease status, recurrence events
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+      - name: fhir_procedure
+        description: FHIR Procedure - surgery and radiation therapy
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+      - name: fhir_medication
+        description: FHIR MedicationAdministration (dated) and MedicationStatement (undated) - systemic therapy
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+      - name: fhir_encounter
+        description: FHIR Encounter - follow-up / last-contact visits
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+
+  - name: registry
+    description: Curated research-registry extracts from the cBioPortal REST API (long -> wide pivot in Polars).
+    schema: raw
+    loaded_at_field: _loaded_at
+    tables:
+      - name: cbio_brca_tcga_pan_can_atlas_2018_patient
+        description: TCGA PanCancer Atlas curated clinical endpoints (TCGA-CDR; Liu et al., Cell 2018)
+      - name: cbio_brca_tcga_pan_can_atlas_2018_sample
+      - name: cbio_brca_metabric_patient
+        description: METABRIC patient-level clinical data (Curtis 2012; Pereira 2016; Rueda 2019)
+      - name: cbio_brca_metabric_sample
+        description: METABRIC sample-level attributes (tumor size, grade, stage, receptor status)
