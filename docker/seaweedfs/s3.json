@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "oncoinsight",
+      "credentials": [{"accessKey": "oncoinsight", "secretKey": "oncoinsight-secret"}],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}
