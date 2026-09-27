@@ -1,0 +1,138 @@
+version: 2
+
+models:
+  - name: dim_patient
+    description: Patient dimension (TCGA-BRCA). Ages over 89 are obfuscated by TCGA.
+    columns:
+      - name: patient_id
+        description: GDC case UUID (FHIR Patient.id)
+        data_tests: [unique, not_null]
+      - name: patient_barcode
+        data_tests: [unique, not_null]
+      - name: gender
+        data_tests:
+          - accepted_values: {values: ['female', 'male', 'unknown']}
+      - name: age_group
+        data_tests:
+          - accepted_values: {values: ['<40', '40-49', '50-64', '65-74', '75+', 'Unknown']}
+      - name: hospital_id
+        data_tests:
+          - relationships: {to: ref('dim_hospital'), field: hospital_id}
+
+  - name: dim_hospital
+    description: TCGA tissue source sites with site type and benchmarking eligibility.
+    columns:
+      - name: hospital_id
+        data_tests: [unique, not_null]
+      - name: site_type
+        data_tests:
+          - accepted_values:
+              values: ['Academic medical center', 'Cancer center', 'Community health system',
+                       'Military medical center', 'Biorepository / research institute', 'Unclassified']
+              config: {severity: warn}
+
+  - name: dim_stage
+    columns:
+      - name: stage_group
+        data_tests: [unique, not_null]
+  - name: dim_cancer
+    columns:
+      - name: cancer_key
+        data_tests: [unique, not_null]
+  - name: dim_biomarker
+    columns:
+      - name: biomarker_key
+        data_tests: [unique, not_null]
+      - name: receptor_subtype
+        data_tests:
+          - accepted_values: {values: ['HR+/HER2-', 'HR+/HER2+', 'HR-/HER2+', 'Triple negative', 'Unknown']}
+  - name: dim_treatment
+    columns:
+      - name: treatment_key
+        data_tests: [unique, not_null]
+  - name: dim_date
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+
+  - name: fact_diagnosis
+    description: One index primary breast cancer diagnosis per patient.
+    columns:
+      - name: diagnosis_id
+        data_tests: [unique, not_null]
+      - name: patient_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships: {to: ref('dim_patient'), field: patient_id}
+      - name: stage_group
+        data_tests:
+          - relationships: {to: ref('dim_stage'), field: stage_group}
+      - name: cancer_key
+        data_tests:
+          - relationships: {to: ref('dim_cancer'), field: cancer_key}
+      - name: biomarker_key
+        data_tests:
+          - relationships: {to: ref('dim_biomarker'), field: biomarker_key}
+      - name: lymph_nodes_positive
+        data_tests: [non_negative]
+
+  - name: fact_treatment
+    description: Incremental fact - one row per treatment record for the index cancer (grain = FHIR resource).
+    data_tests:
+      - expression_is_true:
+          expression: "end_day >= start_day"
+          where: "end_day is not null and start_day is not null"
+          config: {severity: warn}
+    columns:
+      - name: treatment_id
+        data_tests: [unique, not_null]
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_patient'), field: patient_id}
+      - name: treatment_key
+        data_tests:
+          - relationships: {to: ref('dim_treatment'), field: treatment_key, config: {severity: warn}}
+      - name: pathway_modality
+        data_tests:
+          - accepted_values:
+              values: ['Surgery', 'Radiation', 'Chemotherapy', 'Endocrine', 'HER2-targeted', 'Other targeted',
+                       'Immunotherapy', 'Bone-modifying', 'Supportive', 'Unspecified systemic']
+      - name: estimated_cost_usd
+        data_tests: [non_negative]
+
+  - name: fact_medication
+    columns:
+      - name: treatment_id
+        data_tests: [unique, not_null]
+  - name: fact_observation
+    columns:
+      - name: observation_id
+        data_tests: [unique, not_null]
+      - name: patient_id
+        data_tests:
+          - relationships: {to: ref('dim_patient'), field: patient_id}
+  - name: fact_encounter
+    columns:
+      - name: encounter_id
+        data_tests: [unique, not_null]
+  - name: fact_estimated_cost
+    description: Reference-priced cost lines (CMS 2026 PFS / ASP / NADAC). Estimates, not claims.
+    columns:
+      - name: cost_line_id
+        data_tests: [unique, not_null]
+      - name: estimated_amount_usd
+        data_tests: [not_null, non_negative]
+      - name: treatment_id
+        data_tests:
+          - relationships: {to: ref('fact_treatment'), field: treatment_id}
+  - name: fact_outcome
+    columns:
+      - name: patient_id
+        data_tests: [unique, not_null]
+      - name: os_months
+        data_tests: [non_negative]
+      - name: os_event
+        data_tests:
+          - accepted_values: {values: [0, 1], quote: false}
