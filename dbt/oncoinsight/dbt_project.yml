@@ -1,0 +1,49 @@
+name: oncoinsight
+version: "1.0.0"
+config-version: 2
+profile: oncoinsight
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Standard patient assumptions for dose-based drug costing (no height/weight in TCGA)
+  bsa_m2: 1.8
+  weight_kg: 70
+  default_radiation_fractions: 25
+  default_endocrine_days: 1826   # 5 years of adjuvant endocrine therapy
+  chemo_delay_threshold_days: 90 # Chavez-MacGregor et al., JAMA Oncol 2016
+  min_hospital_patients: 20      # suppress hospital-level stats below this n
+
+models:
+  oncoinsight:
+    +persist_docs: {relation: true, columns: true}
+    staging:
+      +schema: stg
+      +materialized: view
+    intermediate:
+      +schema: int
+      +materialized: table
+    marts:
+      core:
+        +schema: core
+        +materialized: table
+      analytics:
+        +schema: marts
+        +materialized: table
+
+seeds:
+  oncoinsight:
+    +schema: ref
+    ref_cms_reference_prices:
+      +column_types: {unit_price_usd: numeric, hcpcs_code: text}
+    ref_agent_catalog:
+      +column_types: {units_per_administration: numeric, default_administrations: numeric, administrations_per_cycle: numeric}
+
+on-run-end:
+  - "{{ grant_reader_usage() }}"
