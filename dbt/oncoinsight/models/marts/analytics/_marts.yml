@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: mart_patient_360
+    description: >
+      One row per patient: demographics, site, diagnosis, ER/PR/HER2 subtype, treatment pathway and timing
+      (days from index diagnosis), follow-up, curated survival endpoints and estimated cost.
+    data_tests:
+      - row_count_between: {min_value: "{{ var('min_patient_rows', 1000) }}", max_value: 5000}
+    columns:
+      - name: patient_id
+        description: GDC case UUID (FHIR Patient.id)
+        data_tests: [unique, not_null]
+      - name: patient_barcode
+        description: TCGA participant barcode, e.g. TCGA-BH-A0B6
+      - name: age_at_diagnosis
+        description: Age in years at index diagnosis (TCGA caps ages > 89)
+      - name: age_group
+        description: <40, 40-49, 50-64, 65-74, 75+
+      - name: race_ethnicity
+        description: Hispanic, or race among non-Hispanic patients
+      - name: hospital_name
+        description: TCGA tissue source site (contributing hospital or biorepository)
+      - name: site_type
+        description: Academic medical center / Cancer center / Community / Military / Biorepository (ref_site_classification)
+      - name: is_benchmarkable
+        description: Treating facility with >= 20 patients; eligible for hospital comparisons
+      - name: year_of_diagnosis
+        description: Diagnosis year (finest time grain published by TCGA)
+      - name: stage_group
+        description: AJCC pathologic stage group
+      - name: stage_major
+        description: AJCC major stage (0, I, II, III, IV, Unknown)
+      - name: lymph_nodes_positive
+        description: Regional lymph nodes positive (LOINC 21893-3)
+      - name: receptor_subtype
+        description: HR+/HER2-, HR+/HER2+, HR-/HER2+, Triple negative, Unknown (HER2 by ISH when available)
+      - name: pam50_subtype
+        description: PAM50 intrinsic subtype from TCGA PanCancer Atlas
+      - name: pathway
+        description: Ordered treatment modalities by first dated start, e.g. "Surgery → Chemotherapy → Radiation"
+      - name: pathway_is_complete
+        description: False when any delivered treatment lacks a start date (pathway may be missing steps)
+      - name: days_to_chemotherapy
+        description: Days from index diagnosis to first chemotherapy (negative = neoadjuvant)
+      - name: days_to_radiation
+        description: Days from index diagnosis to first radiation
+      - name: days_to_endocrine
+        description: Days from index diagnosis to first endocrine therapy
+      - name: chemo_delayed_over_90d
+        description: Adjuvant chemotherapy started > 90 days after diagnosis (JAMA Oncol 2016 threshold)
+      - name: chemo_timing_group
+        description: Neoadjuvant / 0-30 / 31-60 / 61-90 / >90 days
+      - name: n_follow_up_visits
+        description: Follow-up encounters recorded
+      - name: os_months
+        description: Overall survival time (months), TCGA PanCancer CDR
+      - name: os_event
+        description: 1 = died, 0 = censored
+      - name: pfs_months
+        description: Progression-free interval time (months), TCGA PanCancer CDR
+      - name: any_progression_or_recurrence
+        description: PFI event or GDC-recorded progression/recurrence
+      - name: total_estimated_cost_usd
+        description: Sum of reference-priced cost lines (CMS 2026 PFS/ASP/NADAC; estimate, not charges)
+        data_tests: [not_null, non_negative]
+      - name: has_unpriced_treatment
+        description: At least one delivered treatment without a retrieved reference price
+
+  - name: mart_treatment_pathways
+    columns:
+      - name: pathway
+        data_tests: [unique, not_null]
+      - name: pct_of_patients
+        data_tests:
+          - within_range: {min_value: 0, max_value: 100}
+
+  - name: mart_pathway_transitions
+    description: Sankey edges; source/target node labels with patient counts.
+    data_tests:
+      - expression_is_true: {expression: "n_patients > 0"}
+
+  - name: mart_treatment_delay
+    columns:
+      - name: interval_days
+        data_tests:
+          - within_range: {min_value: 0, max_value: 730}
+      - name: interval_name
+        data_tests:
+          - accepted_values:
+              values: ['Diagnosis → Chemotherapy', 'Diagnosis → Radiation', 'Diagnosis → Endocrine therapy',
+                       'Diagnosis → First adjuvant treatment', 'Chemotherapy end → Radiation']
+
+  - name: mart_delay_by_hospital
+  - name: mart_survival
+    columns:
+      - name: patient_id
+        data_tests: [unique, not_null]
+      - name: os_months
+        data_tests: [not_null, non_negative]
+  - name: mart_recurrence
+    columns:
+      - name: patient_id
+        data_tests: [unique, not_null]
+  - name: mart_recurrence_summary
+  - name: mart_cost_analysis
+  - name: mart_kpi_annual
+    columns:
+      - name: new_diagnoses
+        data_tests: [not_null, non_negative]
+  - name: mart_disparities
+  - name: mart_treatment_adherence
+    columns:
+      - name: treatment_id
+        data_tests: [unique, not_null]
+  - name: mart_metabric_cohort
+    data_tests:
+      - row_count_between: {min_value: "{{ var('min_metabric_rows', 2400) }}", max_value: 2600}
+    columns:
+      - name: patient_id
+        data_tests: [unique, not_null]
+  - name: mart_patient_pathway_steps
+    description: One row per patient per ordered treatment step (first dated start of each modality group)
+    data_tests:
+      - expression_is_true: {expression: "step_number >= 1"}
+    columns:
+      - name: patient_id
+        data_tests: [not_null]
