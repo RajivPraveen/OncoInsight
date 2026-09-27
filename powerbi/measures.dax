@@ -1,0 +1,84 @@
+// OncoInsight DAX measures. Create a "_Measures" table and paste these in.
+// Definitions mirror docs/metric_definitions.md and the semantic layer, so BI and API numbers reconcile.
+
+Patients = DISTINCTCOUNT ( dim_patient[patient_id] )
+
+Treated Patients = CALCULATE ( DISTINCTCOUNT ( fact_treatment[patient_id] ), fact_treatment[is_delivered] = TRUE () )
+
+// ---------- time to treatment (adjuvant starts 0-730 days) ----------
+Chemo Starts (timed) =
+CALCULATE (
+    DISTINCTCOUNT ( mart_patient_360[patient_id] ),
+    mart_patient_360[days_to_chemotherapy] >= 0,
+    mart_patient_360[days_to_chemotherapy] <= 730
+)
+
+Median Days to Chemotherapy =
+CALCULATE (
+    MEDIAN ( mart_patient_360[days_to_chemotherapy] ),
+    mart_patient_360[days_to_chemotherapy] >= 0,
+    mart_patient_360[days_to_chemotherapy] <= 730
+)
+
+% Chemo > 90 Days =
+DIVIDE (
+    CALCULATE ( [Chemo Starts (timed)], mart_patient_360[chemo_delayed_over_90d] = TRUE () ),
+    [Chemo Starts (timed)]
+)
+
+Median Days to Radiation =
+CALCULATE (
+    MEDIAN ( mart_patient_360[days_to_radiation] ),
+    mart_patient_360[days_to_radiation] >= 0,
+    mart_patient_360[days_to_radiation] <= 730
+)
+
+Network Median Days to Chemotherapy =
+CALCULATE ( [Median Days to Chemotherapy], REMOVEFILTERS ( mart_patient_360[hospital_name] ) )
+
+Δ vs Network (days) = [Median Days to Chemotherapy] - [Network Median Days to Chemotherapy]
+
+// ---------- outcomes (crude) ----------
+Crude Mortality % = DIVIDE ( SUM ( fact_outcome[os_event] ), COUNTROWS ( fact_outcome ) )
+
+Crude Recurrence % =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( fact_outcome ), fact_outcome[any_progression_or_recurrence] = TRUE () ),
+    COUNTROWS ( fact_outcome )
+)
+
+// ---------- guideline-concordance proxies ----------
+Chemo When Indicated % =
+VAR indicated =
+    FILTER (
+        mart_patient_360,
+        mart_patient_360[receptor_subtype] IN { "Triple negative", "HR-/HER2+", "HR+/HER2+" }
+            && mart_patient_360[stage_major] IN { "II", "III" }
+    )
+RETURN
+    DIVIDE (
+        COUNTROWS ( FILTER ( indicated, mart_patient_360[received_chemotherapy] = TRUE () ) ),
+        COUNTROWS ( indicated )
+    )
+
+HER2-Targeted Among HER2+ % =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( mart_patient_360 ), mart_patient_360[her2_status] = "Positive",
+                mart_patient_360[received_her2_targeted] = TRUE () ),
+    CALCULATE ( COUNTROWS ( mart_patient_360 ), mart_patient_360[her2_status] = "Positive" )
+)
+
+// ---------- cost (CMS 2026 reference-price estimates) ----------
+Estimated Cost = SUM ( fact_estimated_cost[estimated_amount_usd] )
+
+Mean Estimated Cost per Patient = DIVIDE ( [Estimated Cost], DISTINCTCOUNT ( fact_estimated_cost[patient_id] ) )
+
+Drug Cost Share % =
+DIVIDE ( CALCULATE ( [Estimated Cost], fact_estimated_cost[cost_component] = "drug" ), [Estimated Cost] )
+
+// ---------- small-cell suppression (use in visuals' value fields) ----------
+Suppressed Median Days to Chemotherapy =
+IF ( [Chemo Starts (timed)] < 11, BLANK (), [Median Days to Chemotherapy] )
+
+// ---------- alerts ----------
+Open High Alerts = CALCULATE ( COUNTROWS ( kpi_alerts ), kpi_alerts[severity] = "high" )
