@@ -1,0 +1,161 @@
+# OncoInsight semantic layer: governed metric definitions used by the dashboard metric explorer, the API
+# and the AI analytics assistant. Every metric compiles to parameterised SQL over a curated mart; the
+# assistant may only group/filter by the dimensions declared for that metric's model.
+version: 1
+small_cell_threshold: 11   # groups with fewer patients are suppressed (CMS cell-size convention)
+
+models:
+  patient_360:
+    table: marts.mart_patient_360
+    grain: one row per TCGA-BRCA patient
+    count_expression: count(*)
+    dimensions:
+      hospital_name: Contributing site (TCGA tissue source site)
+      site_type: Academic medical center / Cancer center / Community health system / Military / Biorepository
+      is_benchmarkable: true for treating facilities with >= 20 patients
+      stage_major: AJCC major stage (I, II, III, IV, Unknown)
+      stage_group: AJCC stage group (e.g. Stage IIA)
+      stage_category: Early (I-II) / Locally advanced (III) / Metastatic (IV)
+      receptor_subtype: HR+/HER2-, HR+/HER2+, HR-/HER2+, Triple negative, Unknown
+      pam50_subtype: PAM50 molecular subtype (LumA, LumB, Her2, Basal, Normal)
+      histology_group: Invasive ductal / Invasive lobular / Mixed / Other
+      age_group: <40, 40-49, 50-64, 65-74, 75+
+      race: Patient-reported race
+      ethnicity: Patient-reported ethnicity
+      race_ethnicity: Combined race/ethnicity category
+      country_of_residence: Country of residence at enrollment
+      year_of_diagnosis: Diagnosis year (integer)
+      pathway: Ordered treatment pathway, e.g. "Surgery → Chemotherapy → Radiation"
+      chemo_timing_group: Neoadjuvant / 0-30 / 31-60 / 61-90 / >90 days
+      received_chemotherapy: boolean
+      received_radiation: boolean
+      received_endocrine: boolean
+      received_her2_targeted: boolean
+      neoadjuvant_chemotherapy: boolean
+    metrics:
+      patients:
+        expression: count(*)
+        description: Number of patients
+      median_days_to_chemotherapy:
+        expression: percentile_cont(0.5) within group (order by days_to_chemotherapy) filter (where days_to_chemotherapy between 0 and 730)
+        description: Median days from diagnosis to first adjuvant chemotherapy
+        n_expression: count(*) filter (where days_to_chemotherapy between 0 and 730)
+      pct_chemo_over_90d:
+        expression: 100.0 * avg(chemo_delayed_over_90d::int) filter (where days_to_chemotherapy between 0 and 730)
+        description: Percent of adjuvant chemotherapy starts more than 90 days after diagnosis
+        n_expression: count(*) filter (where days_to_chemotherapy between 0 and 730)
+      median_days_to_radiation:
+        expression: percentile_cont(0.5) within group (order by days_to_radiation) filter (where days_to_radiation between 0 and 730)
+        description: Median days from diagnosis to radiation start
+        n_expression: count(*) filter (where days_to_radiation between 0 and 730)
+      median_days_to_endocrine:
+        expression: percentile_cont(0.5) within group (order by days_to_endocrine) filter (where days_to_endocrine between 0 and 730)
+        description: Median days from diagnosis to endocrine therapy start
+        n_expression: count(*) filter (where days_to_endocrine between 0 and 730)
+      pct_received_chemotherapy:
+        expression: 100.0 * avg(received_chemotherapy::int)
+        description: Percent of patients who received chemotherapy
+      pct_received_radiation:
+        expression: 100.0 * avg(received_radiation::int)
+        description: Percent of patients who received radiation therapy
+      pct_received_endocrine:
+        expression: 100.0 * avg(received_endocrine::int)
+        description: Percent of patients who received endocrine therapy
+      pct_received_her2_targeted:
+        expression: 100.0 * avg(received_her2_targeted::int)
+        description: Percent of patients who received HER2-targeted therapy
+      crude_mortality_pct:
+        expression: 100.0 * avg(os_event)
+        description: Percent of patients who died during follow-up (crude, not time-adjusted)
+      crude_recurrence_pct:
+        expression: 100.0 * avg(any_progression_or_recurrence::int)
+        description: Percent with recorded progression or recurrence (crude)
+      mean_estimated_cost_usd:
+        expression: avg(total_estimated_cost_usd)
+        description: Mean estimated treatment cost (CMS 2026 reference prices; estimate, not charges)
+      median_estimated_cost_usd:
+        expression: percentile_cont(0.5) within group (order by total_estimated_cost_usd)
+        description: Median estimated treatment cost
+      median_follow_up_months:
+        expression: percentile_cont(0.5) within group (order by os_months)
+        description: Median follow-up (months)
+      mean_age:
+        expression: avg(age_at_diagnosis)
+        description: Mean age at diagnosis
+
+  treatment_adherence:
+    table: marts.mart_treatment_adherence
+    grain: one row per delivered systemic or radiation treatment record
+    count_expression: count(distinct patient_id)
+    dimensions:
+      hospital_name: Contributing site
+      stage_major: AJCC major stage
+      receptor_subtype: Receptor subtype
+      age_group: Age group
+      race_ethnicity: Race/ethnicity
+      pathway_modality: Chemotherapy / HER2-targeted / Endocrine / Radiation
+      treatment_name: Normalised agent name (e.g. Doxorubicin, Paclitaxel, Trastuzumab)
+      drug_class: Drug class (e.g. Anthracycline, Taxane, Aromatase inhibitor)
+      treatment_outcome: Reported outcome (Complete Response, Progressive Disease, Treatment Ongoing, ...)
+    metrics:
+      treated_patients:
+        expression: count(distinct patient_id)
+        description: Distinct patients with a qualifying treatment record
+      standard_cycle_completion_pct:
+        expression: 100.0 * avg(completed_standard_cycles::int) filter (where completed_standard_cycles is not null)
+        description: Percent of cycle-based regimens with reported cycles >= the standard regimen length
+        n_expression: count(*) filter (where completed_standard_cycles is not null)
+      mean_cycles:
+        expression: avg(number_of_cycles)
+        description: Mean reported cycles
+      endocrine_4_5y_pct:
+        expression: 100.0 * avg(endocrine_4_5y_or_more::int) filter (where endocrine_4_5y_or_more is not null)
+        description: Percent of dated endocrine courses lasting >= 4.5 years
+        n_expression: count(*) filter (where endocrine_4_5y_or_more is not null)
+      progressed_on_treatment_pct:
+        expression: 100.0 * avg(progressed_on_treatment::int) filter (where treatment_outcome is not null)
+        description: Percent of records with reported progressive disease
+        n_expression: count(*) filter (where treatment_outcome is not null)
+
+  kpi_annual:
+    table: marts.mart_kpi_annual
+    grain: one row per entity (Network or hospital) per diagnosis year - already aggregated
+    count_expression: sum(new_diagnoses)
+    dimensions:
+      entity_type: Network or Hospital
+      entity: Site name, or 'All sites'
+      year_of_diagnosis: Diagnosis year
+    metrics:
+      new_diagnoses:
+        expression: sum(new_diagnoses)
+        description: New diagnoses
+      kpi_median_days_to_chemotherapy:
+        expression: avg(median_days_to_chemotherapy)
+        description: Pre-computed median days to chemotherapy (use with entity + year dimensions)
+      kpi_pct_chemo_over_90d:
+        expression: avg(pct_chemo_over_90d)
+        description: Pre-computed percent of chemo starts > 90 days (use with entity + year dimensions)
+
+tables_for_sql:
+  # Tables the assistant may query directly with run_sql (read-only role; curated, de-identified research data)
+  marts.mart_patient_360: Patient-level 360 view (see patient_360 dimensions above plus days_to_* intervals, os/dss/pfs months and events, cost columns)
+  marts.mart_treatment_pathways: Pathway summary (n, pct, timing, cost, crude outcomes)
+  marts.mart_pathway_transitions: Sankey edges (source, target, n_patients)
+  marts.mart_treatment_delay: Long-format intervals (patient_id, interval_name, interval_days, stratifiers)
+  marts.mart_delay_by_hospital: Hospital timing benchmarks vs network median
+  marts.mart_recurrence_summary: Crude recurrence rates by factor
+  marts.mart_cost_analysis: Estimated cost by pathway / stage / subtype / site type
+  marts.mart_kpi_annual: KPIs by entity and diagnosis year
+  marts.mart_disparities: Equity metrics by patient group
+  marts.mart_treatment_adherence: Treatment completion signals
+  marts.mart_metabric_cohort: METABRIC validation cohort (patient level)
+  analytics.km_summary: Kaplan-Meier median / 5y / 10y survival by cohort, endpoint, stratifier, group
+  analytics.logrank_tests: Log-rank tests
+  analytics.cox_coefficients: Cox model hazard ratios (model, covariate, hazard_ratio, ci_lower, ci_upper, p_value)
+  analytics.cox_model_fit: Cox model n, events, concordance
+  analytics.disparity_tests: Group comparison tests with FDR-adjusted p-values
+  analytics.delay_drivers: Adjusted odds ratios / median differences for chemotherapy delay
+  analytics.hospital_risk_adjusted_delay: Case-mix-adjusted observed/expected chemo delay by hospital
+  analytics.recurrence_model_metrics: Recurrence model performance
+  analytics.recurrence_feature_importance: Permutation feature importance
+  ops.kpi_alerts: KPI monitoring alerts (kpi, entity, period, current_value, baseline_value, pct_change, severity, message)
