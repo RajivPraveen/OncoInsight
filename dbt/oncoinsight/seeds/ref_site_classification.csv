@@ -1,0 +1,41 @@
+tss_code,site_type,is_treating_facility
+BH,Academic medical center,true
+A2,Military medical center,true
+E2,Cancer center,true
+A8,Biorepository / research institute,false
+D8,Cancer center,true
+AR,Academic medical center,true
+E9,Biorepository / research institute,false
+B6,Academic medical center,true
+C8,Biorepository / research institute,false
+AC,Biorepository / research institute,false
+AO,Cancer center,true
+EW,Academic medical center,true
+A7,Community health system,true
+AN,Biorepository / research institute,false
+OL,Academic medical center,true
+GM,Cancer center,true
+LL,Community health system,true
+A1,Academic medical center,true
+S3,Academic medical center,true
+AQ,Academic medical center,true
+LD,Community health system,true
+3C,Academic medical center,true
+PL,Biorepository / research institute,false
+PE,Cancer center,true
+Z7,Cancer center,true
+5L,Academic medical center,true
+GI,Biorepository / research institute,false
+HN,Biorepository / research institute,false
+JL,Biorepository / research institute,false
+WT,Academic medical center,true
+XX,Community health system,true
+LQ,Community health system,true
+5T,Community health system,true
+UL,Academic medical center,true
+UU,Cancer center,true
+V7,Academic medical center,true
+W8,Community health system,true
+4H,Biorepository / research institute,false
+OK,Academic medical center,true
+MS,Academic medical center,true
