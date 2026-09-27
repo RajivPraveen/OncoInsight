@@ -1,0 +1,85 @@
+# OncoInsight local stack. Host ports are offset to avoid clashing with other local projects:
+#   Postgres 5433 | MinIO 9010 (console 9011) | Dagster 3001 | API 8010 | Streamlit 8502
+name: oncoinsight
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  image: oncoinsight:latest
+  env_file: [.env]
+  environment: &app-env
+    ONCO_ENV: docker
+    WAREHOUSE_HOST: postgres
+    WAREHOUSE_PORT: "5432"
+    ONCO_STORAGE_BACKEND: s3
+    ONCO_S3_ENDPOINT_URL: http://s3:8333
+    DAGSTER_HOME: /opt/dagster/home
+    DBT_PROFILES_DIR: /app/dbt/oncoinsight
+  volumes:
+    - appdata:/app/data   # model artefacts shared between pipeline (writer) and API/dashboard (readers)
+  depends_on:
+    postgres: {condition: service_healthy}
+    s3: {condition: service_healthy}
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${WAREHOUSE_DB:-oncoinsight}
+      POSTGRES_USER: ${WAREHOUSE_USER:-oncoinsight}
+      POSTGRES_PASSWORD: ${WAREHOUSE_PASSWORD:-oncoinsight}
+      ONCO_READER_PASSWORD: ${WAREHOUSE_READER_PASSWORD:-onco_reader}
+    ports: ["127.0.0.1:5433:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WAREHOUSE_USER:-oncoinsight} -d ${WAREHOUSE_DB:-oncoinsight}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # S3-compatible object store for the raw layer (SeaweedFS; swap for AWS S3 in the cloud via env vars)
+  s3:
+    image: chrislusf/seaweedfs:latest
+    command: ["server", "-ip=127.0.0.1", "-ip.bind=0.0.0.0", "-dir=/data", "-s3", "-s3.port=8333", "-s3.config=/etc/seaweedfs/s3.json", "-master.volumeSizeLimitMB=256"]
+    ports: ["127.0.0.1:9010:8333"]
+    volumes:
+      - s3data:/data
+      - ./docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/healthz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  dagster-webserver:
+    <<: *app
+    command: ["dagster-webserver", "-h", "0.0.0.0", "-p", "3000", "-w", "/opt/dagster/home/workspace.yaml"]
+    ports: ["127.0.0.1:3001:3000"]
+
+  dagster-daemon:
+    <<: *app
+    command: ["dagster-daemon", "run", "-w", "/opt/dagster/home/workspace.yaml"]
+
+  api:
+    <<: *app
+    command: ["uvicorn", "oncoinsight.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["127.0.0.1:8010:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      retries: 5
+
+  dashboard:
+    <<: *app
+    command: ["streamlit", "run", "app/Home.py", "--server.port", "8501", "--server.address", "0.0.0.0",
+              "--server.headless", "true"]
+    ports: ["127.0.0.1:8502:8501"]
+
+volumes:
+  pgdata:
+  s3data:
+  appdata:
