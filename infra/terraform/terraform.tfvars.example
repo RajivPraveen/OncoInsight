@@ -1,0 +1,5 @@
+region              = "us-east-1"
+environment         = "dev"
+vpc_id              = "vpc-0123456789abcdef0"
+private_subnet_ids  = ["subnet-aaaa", "subnet-bbbb"]
+allowed_cidr_blocks = ["10.0.0.0/8"]
