@@ -1,0 +1,9 @@
+rule_id,modality,price_id,quantity_basis,quantity_multiplier,assumption
+rad_planning,radiation,cpt_77263_pfs_nf,per_course,1,One complex clinical treatment plan per radiation course
+rad_delivery,radiation,cpt_77412_pfs_nf,per_fraction,1,3D/complex delivery per fraction (IMRT codes absent from CY2026 RVU file); observed fractions or default 25
+rad_management,radiation,cpt_77427_pfs_nf,per_5_fractions,1,Weekly treatment management billed per 5 fractions (rounded up)
+surg_lumpectomy,surgery,cpt_19301_pfs_fac,per_course,0.5,Surgery type not reported in TCGA: blended 50/50 lumpectomy vs mastectomy surgeon fee
+surg_mastectomy,surgery,cpt_19303_pfs_fac,per_course,0.5,Surgery type not reported in TCGA: blended 50/50 lumpectomy vs mastectomy surgeon fee
+surg_axilla,surgery,cpt_38525_pfs_fac,per_course,1,Axillary nodal staging assumed for invasive disease
+surg_sentinel_mapping,surgery,cpt_38900_pfs_fac,per_course,1,Sentinel node mapping add-on
+chemo_admin,chemo_admin,cpt_96413_pfs_nf,per_infusion_day,1,One first-hour chemo infusion per infusion day (concurrent same-day agents share one administration)
