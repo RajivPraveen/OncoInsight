@@ -1,0 +1,66 @@
+agent_key,canonical_agent,drug_class,pathway_modality,route,price_id,dosing_basis,units_per_administration,administrations_per_cycle,default_administrations,iv_infusion,dosing_assumption
+cyclophosphamide,Cyclophosphamide,Alkylating agent,Chemotherapy,IV,j9075_asp,per_cycle,216,1,4,true,600 mg/m2 x 1.8 m2 = 1080 mg q3w (AC x4); J9075 per 5 mg
+doxorubicin,Doxorubicin,Anthracycline,Chemotherapy,IV,j9000_asp,per_cycle,10.8,1,4,true,60 mg/m2 x 1.8 m2 = 108 mg q3w (AC x4); J9000 per 10 mg
+doxorubicin hydrochloride,Doxorubicin,Anthracycline,Chemotherapy,IV,j9000_asp,per_cycle,10.8,1,4,true,60 mg/m2 x 1.8 m2 = 108 mg q3w (AC x4); J9000 per 10 mg
+pegylated liposomal doxorubicin hydrochloride,Pegylated liposomal doxorubicin,Anthracycline,Chemotherapy,IV,,per_cycle,,1,6,true,Not priced (HCPCS not retrieved)
+epirubicin,Epirubicin,Anthracycline,Chemotherapy,IV,j9178_asp,per_cycle,90,1,3,true,100 mg/m2 x 1.8 m2 = 180 mg q3w (FEC100 x3); J9178 per 2 mg
+paclitaxel,Paclitaxel,Taxane,Chemotherapy,IV,j9267_asp,per_cycle,315,1,4,true,175 mg/m2 x 1.8 m2 = 315 mg q2-3w (x4); J9267 per 1 mg
+docetaxel,Docetaxel,Taxane,Chemotherapy,IV,j9171_asp,per_cycle,135,1,4,true,75 mg/m2 x 1.8 m2 = 135 mg q3w (x4); J9171 per 1 mg
+nab-paclitaxel,Nab-paclitaxel,Taxane,Chemotherapy,IV,j9264_asp,per_cycle,468,1,4,true,260 mg/m2 x 1.8 m2 = 468 mg q3w (x4); J9264 per 1 mg
+taxane compound,Taxane (unspecified),Taxane,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (agent unspecified)
+tesetaxel,Tesetaxel,Taxane,Chemotherapy,Oral,,per_cycle,,1,4,false,Investigational; not priced
+fluorouracil,Fluorouracil,Antimetabolite,Chemotherapy,IV,j9192_asp,per_cycle,90,1,6,true,500 mg/m2 x 1.8 m2 = 900 mg q3w (FEC/CMF x6); J9192 per 10 mg
+methotrexate,Methotrexate,Antimetabolite,Chemotherapy,IV,j9260_asp,per_cycle,1.44,2,6,true,40 mg/m2 x 1.8 m2 = 72 mg d1+d8 (CMF x6); J9260 per 50 mg
+capecitabine,Capecitabine,Antimetabolite,Chemotherapy,Oral,capecitabine_500mg_nadac,per_cycle,126,1,8,false,1250 mg/m2 BID d1-14 = 9 x 500 mg tablets/day x 14 days per 21-day cycle (x8)
+gemcitabine,Gemcitabine,Antimetabolite,Chemotherapy,IV,j9201_asp,per_cycle,11.25,2,6,true,1250 mg/m2 x 1.8 m2 = 2250 mg d1+d8 q3w (x6); J9201 per 200 mg
+gemcitabine hydrochloride,Gemcitabine,Antimetabolite,Chemotherapy,IV,j9201_asp,per_cycle,11.25,2,6,true,1250 mg/m2 x 1.8 m2 = 2250 mg d1+d8 q3w (x6); J9201 per 200 mg
+pemetrexed,Pemetrexed,Antimetabolite,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+carboplatin,Carboplatin,Platinum,Chemotherapy,IV,j9045_asp,per_cycle,15,1,6,true,AUC 6 (Calvert; GFR 100 mL/min) = 750 mg q3w (x6); J9045 per 50 mg
+cisplatin,Cisplatin,Platinum,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+vinorelbine,Vinorelbine,Vinca alkaloid,Chemotherapy,IV,,per_cycle,,1,6,true,Not priced (HCPCS not retrieved)
+vinorelbine tartrate,Vinorelbine,Vinca alkaloid,Chemotherapy,IV,,per_cycle,,1,6,true,Not priced (HCPCS not retrieved)
+vincristine,Vincristine,Vinca alkaloid,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+vinblastine,Vinblastine,Vinca alkaloid,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+ixabepilone,Ixabepilone,Epothilone,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+mitoxantrone,Mitoxantrone,Anthracenedione,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+mitomycin,Mitomycin,Antitumor antibiotic,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+etoposide,Etoposide,Topoisomerase inhibitor,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+ifosfamide,Ifosfamide,Alkylating agent,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+trabectedin,Trabectedin,Alkylating agent,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+chemotherapy,Chemotherapy (unspecified),Unspecified chemotherapy,Chemotherapy,IV,,per_cycle,,1,4,true,Not priced (agent unspecified)
+trastuzumab,Trastuzumab,HER2-targeted antibody,HER2-targeted,IV,j9355_asp,per_cycle,42,1,17,true,6 mg/kg x 70 kg = 420 mg q3w for 1 year (x17); J9355 per 10 mg
+lapatinib,Lapatinib,HER2 tyrosine kinase inhibitor,HER2-targeted,Oral,,per_cycle,,1,12,false,Not priced (oral; NADAC not retrieved)
+bevacizumab,Bevacizumab,VEGF inhibitor,Other targeted,IV,j9035_asp,per_cycle,70,1,12,true,10 mg/kg x 70 kg = 700 mg q2w (x12); J9035 per 10 mg
+everolimus,Everolimus,mTOR inhibitor,Other targeted,Oral,,per_cycle,,1,12,false,Not priced (oral; NADAC not retrieved)
+rituximab,Rituximab,Anti-CD20 antibody,Other targeted,IV,,per_cycle,,1,4,true,Not priced (HCPCS not retrieved)
+nelipepimut-s,Nelipepimut-S,Cancer vaccine (investigational),Immunotherapy,Intradermal,,per_cycle,,1,6,false,Investigational; not priced
+ae37 peptide/gm-csf vaccine,AE37 peptide vaccine,Cancer vaccine (investigational),Immunotherapy,Intradermal,,per_cycle,,1,6,false,Investigational; not priced
+tamoxifen,Tamoxifen,SERM,Endocrine,Oral,tamoxifen_20mg_nadac,daily,1,,1826,false,20 mg (1 tablet) daily; observed duration or 5 years
+tamoxifen citrate,Tamoxifen,SERM,Endocrine,Oral,tamoxifen_20mg_nadac,daily,1,,1826,false,20 mg (1 tablet) daily; observed duration or 5 years
+toremifene citrate,Toremifene,SERM,Endocrine,Oral,,daily,1,,1826,false,Not priced (NADAC not retrieved)
+anastrozole,Anastrozole,Aromatase inhibitor,Endocrine,Oral,anastrozole_1mg_nadac,daily,1,,1826,false,1 mg (1 tablet) daily; observed duration or 5 years
+letrozole,Letrozole,Aromatase inhibitor,Endocrine,Oral,letrozole_2_5mg_nadac,daily,1,,1826,false,2.5 mg (1 tablet) daily; observed duration or 5 years
+exemestane,Exemestane,Aromatase inhibitor,Endocrine,Oral,exemestane_25mg_nadac,daily,1,,1826,false,25 mg (1 tablet) daily; observed duration or 5 years
+fulvestrant,Fulvestrant,SERD,Endocrine,IM,j9395_asp,per_cycle,20,1,12,false,500 mg IM monthly (x12); J9395 per 25 mg
+goserelin acetate,Goserelin,GnRH agonist,Endocrine,SC implant,,per_cycle,,1,24,false,Not payable under Medicare Part B (no ASP)
+goserelin,Goserelin,GnRH agonist,Endocrine,SC implant,,per_cycle,,1,24,false,Not payable under Medicare Part B (no ASP)
+leuprolide acetate,Leuprolide,GnRH agonist,Endocrine,IM,,per_cycle,,1,24,false,Not priced (breast dosing 3.75 mg/J1950 not retrieved)
+leuprolide,Leuprolide,GnRH agonist,Endocrine,IM,,per_cycle,,1,24,false,Not priced (breast dosing 3.75 mg/J1950 not retrieved)
+triptorelin,Triptorelin,GnRH agonist,Endocrine,IM,,per_cycle,,1,24,false,Not priced (HCPCS not retrieved)
+megestrol acetate,Megestrol,Progestin,Endocrine,Oral,,daily,1,,180,false,Not priced (NADAC not retrieved)
+hormone therapy,Endocrine therapy (unspecified),Unspecified endocrine,Endocrine,Oral,,daily,1,,1826,false,Not priced (agent unspecified)
+zoledronic acid,Zoledronic acid,Bisphosphonate,Bone-modifying,IV,j3489_asp,per_cycle,4,1,6,false,4 mg IV q6 months for 3 years (x6); J3489 per 1 mg
+pamidronate disodium,Pamidronate,Bisphosphonate,Bone-modifying,IV,,per_cycle,,1,6,false,Not priced (HCPCS not retrieved)
+pamidronic acid,Pamidronate,Bisphosphonate,Bone-modifying,IV,,per_cycle,,1,6,false,Not priced (HCPCS not retrieved)
+clodronate disodium,Clodronate,Bisphosphonate,Bone-modifying,Oral,,daily,,,730,false,Not marketed in the US; not priced
+clodronic acid,Clodronate,Bisphosphonate,Bone-modifying,Oral,,daily,,,730,false,Not marketed in the US; not priced
+ibandronate sodium,Ibandronate,Bisphosphonate,Bone-modifying,Oral,,daily,,,1095,false,Not priced (NADAC not retrieved)
+denosumab,Denosumab,RANKL inhibitor,Bone-modifying,SC,,per_cycle,,1,6,false,Not priced (HCPCS not retrieved)
+pegfilgrastim,Pegfilgrastim,G-CSF,Supportive,SC,j2506_asp,per_cycle,12,1,4,false,6 mg SC per chemo cycle (x4); J2506 per 0.5 mg
+palonosetron hydrochloride,Palonosetron,Antiemetic,Supportive,IV,,per_cycle,,1,4,false,Not priced (supportive)
+mesna,Mesna,Uroprotectant,Supportive,IV,,per_cycle,,1,4,false,Not priced (supportive)
+prednisone,Prednisone,Corticosteroid,Supportive,Oral,,daily,,,30,false,Not priced (supportive)
+metformin,Metformin,Other (investigational use),Unspecified systemic,Oral,,daily,,,365,false,Investigational use; not priced
+clinical trial,Clinical trial agent,Investigational,Unspecified systemic,Unknown,,per_cycle,,1,4,false,Investigational; not priced
+clinical trial agent,Clinical trial agent,Investigational,Unspecified systemic,Unknown,,per_cycle,,1,4,false,Investigational; not priced
+"pharmaceutical therapy, nos",Systemic therapy (unspecified),Unspecified,Unspecified systemic,Unknown,,per_cycle,,1,4,false,Not priced (agent unspecified)
