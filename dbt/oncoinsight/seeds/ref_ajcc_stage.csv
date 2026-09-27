@@ -1,0 +1,15 @@
+stage_group,stage_major,stage_order
+Stage 0,0,0
+Stage I,I,10
+Stage IA,I,11
+Stage IB,I,12
+Stage II,II,20
+Stage IIA,II,21
+Stage IIB,II,22
+Stage III,III,30
+Stage IIIA,III,31
+Stage IIIB,III,32
+Stage IIIC,III,33
+Stage IV,IV,40
+Stage X,Unknown,90
+Unknown,Unknown,99
