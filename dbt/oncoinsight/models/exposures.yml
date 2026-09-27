@@ -1,0 +1,62 @@
+version: 2
+
+# Downstream consumers, so lineage continues past the warehouse (visible in `dbt docs` and the Lineage page).
+exposures:
+  - name: streamlit_dashboard
+    label: OncoInsight Streamlit dashboard
+    type: dashboard
+    maturity: high
+    url: http://localhost:8502
+    description: 13-page interactive dashboard (pathways, delays, survival lab, cost what-if, equity, operations).
+    owner: {name: OncoInsight analytics, email: analytics@oncoinsight.dev}
+    depends_on:
+      - ref('mart_patient_360')
+      - ref('mart_patient_pathway_steps')
+      - ref('mart_treatment_delay')
+      - ref('mart_survival')
+      - ref('mart_recurrence_summary')
+      - ref('mart_kpi_annual')
+      - ref('mart_disparities')
+      - ref('fact_estimated_cost')
+      - ref('fact_treatment')
+
+  - name: rest_api
+    label: OncoInsight FastAPI service
+    type: application
+    maturity: high
+    url: http://localhost:8010/docs
+    description: Read-only REST API over marts and analytics results, incl. live cohort survival comparison.
+    owner: {name: OncoInsight analytics, email: analytics@oncoinsight.dev}
+    depends_on:
+      - ref('mart_patient_360')
+      - ref('mart_survival')
+      - ref('mart_treatment_pathways')
+      - ref('mart_delay_by_hospital')
+      - ref('mart_cost_analysis')
+
+  - name: power_bi_model
+    label: Power BI star-schema model
+    type: dashboard
+    maturity: medium
+    description: Power BI report on the core star schema (see powerbi/README.md).
+    owner: {name: OncoInsight analytics, email: analytics@oncoinsight.dev}
+    depends_on:
+      - ref('fact_treatment')
+      - ref('fact_diagnosis')
+      - ref('fact_outcome')
+      - ref('fact_estimated_cost')
+      - ref('dim_patient')
+      - ref('dim_hospital')
+      - ref('dim_stage')
+      - ref('dim_biomarker')
+
+  - name: ai_assistant
+    label: Claude analytics assistant
+    type: ml
+    maturity: medium
+    description: Natural-language analytics over the governed semantic layer and validated read-only SQL.
+    owner: {name: OncoInsight analytics, email: analytics@oncoinsight.dev}
+    depends_on:
+      - ref('mart_patient_360')
+      - ref('mart_treatment_adherence')
+      - ref('mart_kpi_annual')
