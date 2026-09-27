@@ -1,0 +1,23 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+data/*
+!data/.gitkeep
+!data/README.md
+dbt/oncoinsight/target/
+dbt/oncoinsight/dbt_packages/
+dbt/oncoinsight/logs/
+logs/
+.dagster_home/
+infra/terraform/.terraform/
+infra/terraform/*.tfstate*
+infra/terraform/.terraform.lock.hcl
+.DS_Store
+
+# local editor / tool configuration
+.claude/
+dbt/oncoinsight/.user.yml
