@@ -12,6 +12,7 @@
   <a href="#what-is-this">What is this?</a> ·
   <a href="#what-it-found">What it found</a> ·
   <a href="#the-dashboard">The dashboard</a> ·
+  <a href="#kpis-on-the-dashboard">KPIs</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#run-it-yourself">Run it</a> ·
   <a href="#for-technical-reviewers">Technical details</a>
@@ -155,6 +156,62 @@ applies to every chart on every page.
 
 Groups of fewer than 11 patients are hidden for privacy, and every table has a CSV download.
 </details>
+
+---
+
+## KPIs on the dashboard
+
+These are the measures the dashboard tracks, grouped by the question they answer. Values are for all 1,098
+patients; on the dashboard they update when you change the filters. Exact definitions are in
+[metric definitions](docs/metric_definitions.md).
+
+**Waiting times** (the headline KPIs)
+
+| KPI | What it tells you | How it's calculated | Value |
+|---|---|---|---|
+| Typical wait for chemotherapy | How long a patient usually waits to start chemo | Median days from diagnosis to first chemotherapy (after-surgery starts, 0–730 days) | **65 days** |
+| % waiting more than 90 days | How many patients wait past the point linked to worse survival | Share of chemo starts more than 90 days after diagnosis (the threshold is adjustable on the page) | **25%** |
+| Typical wait for radiation / hormone therapy | How long the later steps take | Median days from diagnosis to first radiation / hormone therapy | **182 / 170 days** |
+| Slowest 10% waited over | How bad the worst waits get | 90th percentile of the wait | Waiting times page |
+| Actual ÷ expected late starts, by hospital | Whether a hospital is slower than its patients' needs explain | Late starts observed ÷ late starts predicted from each hospital's mix of stage, tumour type and age (with 95% range) | **2.6×** at the worst hospital |
+
+**Treatment paths**
+
+| KPI | What it tells you | How it's calculated | Value |
+|---|---|---|---|
+| % receiving each treatment | How common surgery, chemo, radiation, hormone and HER2 drugs are | Patients with at least one delivered treatment of that type ÷ all patients | Surgery **98%**, chemo **53%** |
+| Different treatment paths | How varied care is | Number of distinct treatment orders (e.g. Surgery → Chemo → Radiation) | **49** |
+| % with 3+ treatment types | How many patients need several teams | Patients whose path has three or more steps ÷ all patients | **52%** |
+| Gap between steps | Where hand-offs stall | Median days from the end of one treatment to the start of the next | Treatment paths page |
+
+**Outcomes**
+
+| KPI | What it tells you | How it's calculated | Value |
+|---|---|---|---|
+| 5-year survival | How many patients are alive 5 years on | Kaplan-Meier estimate at 60 months, by group | Stage I **91%** → stage IV **27%** |
+| % whose cancer came back or grew | How often treatment doesn't hold | Patients with a recorded recurrence or progression ÷ all patients | **13%** |
+| Extra months, group A vs. B | The survival gap between any two groups you pick | Difference in average event-free months within a chosen horizon (RMST) | Survival page |
+| Risk multiplier | Which factors raise risk, with the others held equal | Hazard ratio from a Cox model | Stage III **3.7×** |
+| Relapse model accuracy | How well 5-year relapse can be predicted | ROC-AUC with 5-fold cross-validation (0.5 = coin flip, 1 = perfect) | **0.71** |
+
+**Cost**
+
+| KPI | What it tells you | How it's calculated | Value |
+|---|---|---|---|
+| Average / typical cost per patient | What care costs | Each patient's actual treatments × 2026 Medicare prices; mean and median | **$15.3K / $13.6K** |
+| Share spent on drugs | Where the money goes | Drug cost ÷ total cost | **35%** |
+| Savings from a change | What a policy change would save | Every cost line re-priced under the chosen scenario, minus today's cost | **−21%** with 16-dose radiation |
+
+**Fairness and operations**
+
+| KPI | What it tells you | How it's calculated | Value |
+|---|---|---|---|
+| % getting chemo when recommended | Whether guideline care reaches everyone | Chemo received among triple-negative or HER2+ patients at stage II–III, by age and race (with 95% range) | Age 40–49 **86%** vs. 75+ **21%** |
+| % HER2+ getting HER2 drugs / % HR+ getting hormone therapy | The same check for targeted treatments | Received the targeted drug ÷ patients whose tumour type calls for it | Fairness page |
+| Alerts raised | Whether a measure moved suddenly | A KPI changes by 25%+ against the median of the previous 3 years, with at least 8 patients and a statistically unusual jump | **51** (37 serious) |
+| Data checks passing | Whether the numbers can be trusted | Automatic quality checks passed ÷ checks run, before every data load | Data checks page |
+
+Groups of fewer than 11 patients are hidden for privacy.
 
 ---
 
