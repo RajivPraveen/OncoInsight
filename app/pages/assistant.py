@@ -1,28 +1,28 @@
 import pandas as pd
 import streamlit as st
-from theme import BLUE, GREEN, ORANGE, VIOLET, footer, note, page_setup, section
+from theme import footer, note, page_setup, section
 
 from oncoinsight.assistant.agent import ask
 from oncoinsight.assistant.semantic import MetricRequest, SemanticError, load_layer, run_metric
 from oncoinsight.common.config import get_settings
 
 settings = get_settings()
-page_setup("AI analytics assistant", "Ask questions in plain English. Claude answers only with governed metrics from "
-           "the semantic layer or validated read-only SQL, and every query it ran is shown for audit.",
-           kicker="Platform", chips=[f"model: {settings.assistant_model}", "semantic layer", "SQL guard", "read-only role"])
+page_setup("Ask the data",
+           "Type a question in plain English. An AI assistant (Claude) looks up the answer in the database and shows "
+           "you exactly which queries it ran, so you can check its work.",
+           kicker="Behind the scenes")
 enabled = settings.anthropic_api_key is not None and bool(settings.anthropic_api_key.get_secret_value())
 
 c = st.columns(3)
 with c[0]:
     n_metrics = sum(len(m["metrics"]) for m in load_layer()["models"].values())
-    note(f"<b>1 · Governed metrics.</b> {n_metrics} metrics with fixed definitions (YAML semantic layer) - the same numbers as "
-         "the API and Power BI.", BLUE)
+    note(f"<b>Agreed definitions.</b> It uses {n_metrics} pre-defined measures, so its numbers match the rest of the "
+         "dashboard.")
 with c[1]:
-    note("<b>2 · SQL guard.</b> Any ad-hoc SQL must be a single SELECT over curated tables; raw/staging tables, DML and "
-         "dangerous functions are rejected.", ORANGE)
+    note("<b>Read-only.</b> Any query it writes is checked first. It can only read finished tables, never change or "
+         "delete anything.")
 with c[2]:
-    note("<b>3 · Least privilege.</b> Queries run as <code>onco_reader</code>: read-only, 30-second timeout, small "
-         "groups (n &lt; 11) suppressed.", GREEN)
+    note("<b>Privacy-safe.</b> Groups smaller than 11 patients are hidden, and every query has a time limit.")
 
 examples = [
     "Show me Stage III patients receiving chemotherapy and compare their treatment completion rates across hospitals.",
@@ -31,9 +31,10 @@ examples = [
     "How does 5-year overall survival differ by receptor subtype in TCGA and METABRIC?",
     "What is the estimated cost of the most common treatment pathways?",
 ]
-section("Ask", VIOLET, "💬")
+section("Ask a question")
 if not enabled:
-    st.warning("Set `ANTHROPIC_API_KEY` in `.env` to enable the assistant. The metric explorer below works without it.")
+    st.info("The AI assistant needs an Anthropic API key (`ANTHROPIC_API_KEY` in `.env`). The measure explorer below "
+            "works without it.")
 else:
     st.session_state.setdefault("history", [])
     cols = st.columns(len(examples))
@@ -41,19 +42,19 @@ else:
     for col, q in zip(cols, examples, strict=True):
         if col.button(q[:42] + "…", help=q, use_container_width=True):
             clicked = q
-    question = st.chat_input("Ask about pathways, delays, survival, recurrence, cost or equity") or clicked
+    question = st.chat_input("Ask about waiting times, treatments, survival, cost or fairness") or clicked
     for turn in st.session_state.history:
         with st.chat_message(turn["role"]):
             st.markdown(turn["content"])
     if question:
         with st.chat_message("user"):
             st.markdown(question)
-        with st.chat_message("assistant"), st.spinner("Querying the warehouse…"):
+        with st.chat_message("assistant"), st.spinner("Looking it up…"):
             try:
                 result = ask(question)
                 st.markdown(result.answer)
                 for i, q in enumerate(result.queries, 1):
-                    with st.expander(f"🔎 Query {i}: {q.tool}{' - ' + q.purpose if q.purpose else ''}{' (error)' if q.error else ''}"):
+                    with st.expander(f"Query {i}: {q.tool}{' - ' + q.purpose if q.purpose else ''}{' (error)' if q.error else ''}"):
                         st.code(q.sql, language="sql")
                         if q.error:
                             st.error(q.error)
@@ -66,15 +67,15 @@ else:
             except Exception as exc:  # surface API/config errors in the UI
                 st.error(f"Assistant error: {exc}")
 
-section("Governed metric explorer (no LLM needed)", GREEN, "🧮")
+section("Explore a measure yourself", blurb="No AI needed: pick a measure and how to split it.")
 layer = load_layer()
 mc = st.columns(4)
-model_name = mc[0].selectbox("Model", list(layer["models"]))
+model_name = mc[0].selectbox("Topic", list(layer["models"]))
 model = layer["models"][model_name]
-metric = mc[1].selectbox("Metric", list(model["metrics"]), format_func=lambda m: m.replace("_", " "))
-dims = mc[2].multiselect("Group by (≤3)", list(model["dimensions"]), max_selections=3,
+metric = mc[1].selectbox("Measure", list(model["metrics"]), format_func=lambda m: m.replace("_", " ").capitalize())
+dims = mc[2].multiselect("Split by (up to 3)", list(model["dimensions"]), max_selections=3,
                          default=["stage_major"] if "stage_major" in model["dimensions"] else [])
-filt_dim = mc[3].selectbox("Filter on", [""] + list(model["dimensions"]))
+filt_dim = mc[3].selectbox("Only include", [""] + list(model["dimensions"]))
 filters = []
 if filt_dim:
     filters.append({"dimension": filt_dim, "operator": "=", "value": st.text_input(f"{filt_dim} equals")})
@@ -93,7 +94,7 @@ try:
         fig.update_layout(height=360, title=f"{metric.replace('_', ' ')} by {', '.join(dims)}", bargap=0.35)
         show(fig, key="metric_chart")
     st.dataframe(df, use_container_width=True, hide_index=True)
-    with st.expander("Compiled, parameterised SQL"):
+    with st.expander("See the SQL"):
         st.code(q.sql, language="sql")
 except SemanticError as exc:
     st.error(str(exc))

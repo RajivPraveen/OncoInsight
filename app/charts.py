@@ -23,8 +23,10 @@ from theme import (
     SERIES,
     SITE_TYPE_COLORS,
     STAGE_COLORS,
+    STATUS,
     SUBTYPE_COLORS,
     SURFACE,
+    plain,
 )
 
 RING = dict(color=SURFACE, width=2)
@@ -43,7 +45,7 @@ def color_for(dim: str, value: str, i: int = 0) -> str:
 
 # ------------------------------------------------------------------ journey
 def sankey(steps: pd.DataFrame, cohort: pd.DataFrame, max_steps: int = 5, min_patients: int = 5,
-           title: str = "Patient journey: diagnosis → ordered treatment steps → outcome") -> go.Figure:
+           title: str = "") -> go.Figure:
     """Build a Sankey from patient-level steps for any cohort (links keep the colour of the step they leave)."""
     ids = set(cohort.patient_id)
     s = steps[steps.patient_id.isin(ids) & (steps.step_number <= max_steps)].copy()
@@ -71,10 +73,10 @@ def sankey(steps: pd.DataFrame, cohort: pd.DataFrame, max_steps: int = 5, min_pa
 
     fig = go.Figure(go.Sankey(
         arrangement="snap",
-        node=dict(label=labels, color=[node_color(x) for x in labels], pad=16, thickness=16, line=RING,
+        node=dict(label=[plain(x) for x in labels], color=[node_color(x) for x in labels], pad=16, thickness=16, line=RING,
                   hovertemplate="%{label}<br><b>%{value}</b> patients<extra></extra>"),
         link=dict(source=[idx[x] for x in edges.source], target=[idx[x] for x in edges.target], value=edges.n,
-                  color=[rgba(node_color(x), 0.28) for x in edges.source],
+                  color=[rgba(node_color(x), 0.12 if x == "Diagnosis" else 0.28) for x in edges.source],
                   hovertemplate="%{source.label} → %{target.label}<br><b>%{value}</b> patients<extra></extra>"),
     ))
     fig.update_layout(height=600, title=title)
@@ -94,17 +96,17 @@ def sunburst_journey(p: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def pathway_treemap(pw: pd.DataFrame, metric: str = "crude_recurrence_pct") -> go.Figure:
+def pathway_treemap(pw: pd.DataFrame, metric: str = "crude_recurrence_pct", metric_label: str | None = None) -> go.Figure:
     d = pw[~pw.pathway.str.startswith("Other")].copy()
     d["steps"] = d.pathway.str.count("→") + 1
-    d["root"] = "All pathways"
+    d["root"] = "All treatment paths"
+    d["pathway"] = d.pathway.map(plain)
     fig = px.treemap(d, path=["root", "pathway"], values="n_patients", color=metric,
                      color_continuous_scale=SEQ_BLUE[1:], hover_data={"median_estimated_cost_usd": ":,.0f"})
+    label = metric_label or metric.replace("_", " ")
     fig.update_traces(marker=dict(line=RING), texttemplate="<b>%{label}</b><br>%{value} patients",
-                      hovertemplate="<b>%{label}</b><br>%{value} patients<br>" + metric.replace("_", " ")
-                                    + ": %{color:.1f}<extra></extra>")
-    fig.update_layout(height=460, title=f"Pathway size (area) coloured by {metric.replace('_', ' ')} - click to drill in",
-                      coloraxis_colorbar=dict(title=""), margin=dict(t=60, l=0, r=0, b=0))
+                      hovertemplate="<b>%{label}</b><br>%{value} patients<br>" + label + ": %{color:,.1f}<extra></extra>")
+    fig.update_layout(height=460, coloraxis_colorbar=dict(title=""), margin=dict(t=20, l=0, r=0, b=0))
     return fig
 
 
@@ -114,7 +116,7 @@ def world_map(p: pd.DataFrame) -> go.Figure:
                         color_continuous_scale=SEQ_BLUE[1:], hover_name="country_of_residence",
                         labels={"size": "patients"})
     fig.update_geos(showframe=False, showcoastlines=False, projection_type="natural earth", bgcolor=SURFACE,
-                    landcolor="#f0efec", showland=True, showcountries=True, countrycolor="#e1e0d9")
+                    landcolor="#f1f0ed", showland=True, showcountries=True, countrycolor="#ecebe7")
     fig.update_layout(height=380, title="Where TCGA-BRCA patients lived at enrollment",
                       margin=dict(t=50, l=0, r=0, b=0), coloraxis_colorbar=dict(title="patients"))
     return fig
@@ -131,12 +133,12 @@ def km_from_table(curves: pd.DataFrame, summary: pd.DataFrame, dim: str, title: 
                                  y=list(d.ci_upper) + list(d.ci_lower[::-1]), fill="toself",
                                  fillcolor=rgba(col, 0.10), line=dict(width=0), hoverinfo="skip", showlegend=False))
         n = int(summary.loc[summary.group_value == g, "n"].iloc[0])
-        fig.add_trace(go.Scatter(x=d.time_months, y=d.survival, mode="lines", name=f"{g} (n={n})",
+        fig.add_trace(go.Scatter(x=d.time_months, y=d.survival, mode="lines", name=(f"Stage {g}" if dim == "stage_major" and g in STAGE_COLORS and g != "Unknown" else plain(str(g))) + f" ({n})",
                                  line=dict(color=col, width=2.5, shape="hv"), customdata=d.at_risk,
                                  hovertemplate=f"<b>%{{y:.1%}}</b> {g} · at risk %{{customdata}}<extra></extra>"))
     fig.update_layout(height=480, title=title, hovermode="x unified",
-                      yaxis=dict(range=[0, 1.02], tickformat=".0%", title="survival probability"),
-                      xaxis=dict(title="months from diagnosis", range=[0, xmax]))
+                      yaxis=dict(range=[0, 1.02], tickformat=".0%", title="% of patients"),
+                      xaxis=dict(title="months since diagnosis", range=[0, xmax]))
     return fig
 
 
@@ -147,24 +149,24 @@ def km_compare(comp, colors=(SERIES[0], SERIES[1])) -> go.Figure:
             continue
         fig.add_trace(go.Scatter(x=c.timeline + c.timeline[::-1], y=c.ci_upper + c.ci_lower[::-1], fill="toself",
                                  fillcolor=rgba(col, 0.12), line=dict(width=0), hoverinfo="skip", showlegend=False))
-        fig.add_trace(go.Scatter(x=c.timeline, y=c.survival, mode="lines", name=f"{c.label} (n={c.n})",
+        fig.add_trace(go.Scatter(x=c.timeline, y=c.survival, mode="lines", name=f"{c.label} ({c.n} patients)",
                                  line=dict(color=col, width=3, shape="hv"), customdata=c.at_risk,
                                  hovertemplate=f"<b>%{{y:.1%}}</b> {c.label} · at risk %{{customdata}}<extra></extra>"))
     fig.add_vline(x=comp.horizon_months, line_color=AXIS, line_width=1,
-                  annotation_text=f"RMST horizon {comp.horizon_months} mo", annotation_font_color=INK_2)
-    fig.update_layout(height=470, hovermode="x unified", title=f"{comp.endpoint}: cohort A vs cohort B",
-                      yaxis=dict(range=[0, 1.02], tickformat=".0%", title="survival probability"),
-                      xaxis=dict(title="months from diagnosis", range=[0, 180]))
+                  annotation_text=f"{comp.horizon_months} months", annotation_font_color=INK_2)
+    fig.update_layout(height=470, hovermode="x unified", title=f"{comp.endpoint}: group A vs. group B",
+                      yaxis=dict(range=[0, 1.02], tickformat=".0%", title="% of patients"),
+                      xaxis=dict(title="months since diagnosis", range=[0, 180]))
     return fig
 
 
 def forest(df: pd.DataFrame, label: str, est: str, lo: str, hi: str, p: str | None = "p_value", ref: float = 1.0,
-           log: bool = True, title: str = "", xtitle: str = "hazard ratio (log scale)") -> go.Figure:
+           log: bool = True, title: str = "", xtitle: str = "risk multiplier (1 = no effect)") -> go.Figure:
     d = df.sort_values(est)
     # significant = p < 0.05, or (without p-values) the 95% CI excludes the reference line
     sig = d[p] < 0.05 if p else (d[lo] > ref) | (d[hi] < ref)
     harmful = d[est] > ref
-    colors = np.where(~sig, DE_EMPHASIS, np.where(harmful, "#d03b3b", SERIES[0]))
+    colors = np.where(~sig, DE_EMPHASIS, np.where(harmful, STATUS["critical"], SERIES[0]))
     fig = go.Figure()
     for r, c in zip(d.itertuples(), colors, strict=True):
         fig.add_shape(type="line", x0=getattr(r, lo), x1=getattr(r, hi), y0=getattr(r, label), y1=getattr(r, label),
@@ -191,12 +193,14 @@ def delay_distribution(d: pd.DataFrame, dim: str, threshold: int, title: str) ->
         if len(v) < 11:
             continue
         col = color_for(dim, g, i)
-        fig.add_trace(go.Violin(y=v, name=f"{g} (n={len(v)})", line_color=col, fillcolor=rgba(col, 0.25),
+        shown = f"Stage {g}" if dim == "stage_major" and g != "Unknown" else str(g)
+        fig.add_trace(go.Violin(y=v, name=f"{shown} ({len(v)})", line_color=col, fillcolor=rgba(col, 0.25),
                                 box_visible=True, meanline_visible=False, points=False, spanmode="hard",
-                                hoveron="violins", hovertemplate=f"{g}<br>median %{{median}} days<extra></extra>"))
-    fig.add_hline(y=threshold, line_color="#d03b3b", line_width=1,
-                  annotation_text=f"{threshold}-day threshold", annotation_font_color=INK_2)
-    fig.update_layout(height=430, title=title, yaxis_title="days from diagnosis", showlegend=False)
+                                hoveron="violins", hovertemplate=f"{shown}<br>typical wait %{{median}} days<extra></extra>"))
+    fig.add_hline(y=threshold, line_color="#b83c3c", line_width=1,
+                  annotation_text=f"{threshold}-day mark", annotation_font_color=INK_2)
+    top = max(threshold * 1.3, float(d.interval_days.quantile(0.97)) * 1.1) if len(d) else threshold * 2
+    fig.update_layout(height=430, title=title, yaxis=dict(title="days waited", range=[0, top]), showlegend=False)
     return fig
 
 
@@ -208,13 +212,14 @@ def scorecard_heatmap(m: pd.DataFrame, rows: str, cols: list[str], labels: dict[
         v = m[c].astype(float)
         zz = (v - v.mean()) / (v.std(ddof=0) or 1)
         z[labels[c]] = (zz if higher_is_worse[c] else -zz).to_numpy()
-    text = m[cols].round(1).astype(str).to_numpy()
+    text = m[cols].map(lambda v: f"{v:,.0f}" if abs(v) >= 100 else f"{v:.1f}").to_numpy()
     fig = go.Figure(go.Heatmap(z=z.to_numpy(), x=list(z.columns), y=list(z.index), zmid=0, zmin=-2.5, zmax=2.5,
                                colorscale=DIVERGING, text=text, texttemplate="%{text}", xgap=3, ygap=3,
                                textfont=dict(color=INK, size=12),
-                               colorbar=dict(title="vs network", tickvals=[-2, 0, 2], ticktext=["better", "avg", "worse"]),
+                               colorbar=dict(title="vs. other<br>hospitals", tickvals=[-2, 0, 2], ticktext=["better", "average", "worse"]),
                                hovertemplate="%{y}<br>%{x}: <b>%{text}</b><extra></extra>"))
-    fig.update_layout(height=120 + 40 * len(z), title=title, yaxis=dict(autorange="reversed"), xaxis=dict(tickangle=-30))
+    fig.update_layout(height=160 + 40 * len(z), title=title, yaxis=dict(autorange="reversed"),
+                      xaxis=dict(tickangle=-25, side="top"), margin=dict(t=110))
     return fig
 
 
@@ -224,11 +229,12 @@ def animated_sites(k: pd.DataFrame) -> go.Figure:
     fig = px.scatter(d, x="median_days_to_chemotherapy", y="pct_chemo_over_90d", size="new_diagnoses", color="entity",
                      animation_frame="year_of_diagnosis", hover_name="entity", size_max=48,
                      range_x=[20, 180], range_y=[-5, 105], color_discrete_sequence=SERIES,
-                     labels={"median_days_to_chemotherapy": "median days to chemotherapy",
-                             "pct_chemo_over_90d": "% chemo starts > 90 days", "new_diagnoses": "diagnoses"})
+                     labels={"median_days_to_chemotherapy": "typical days to chemotherapy",
+                             "pct_chemo_over_90d": "% waiting over 90 days", "new_diagnoses": "patients",
+                             "year_of_diagnosis": "year", "entity": "hospital"})
     fig.update_traces(marker=dict(line=RING, opacity=0.85))
-    fig.add_vline(x=90, line_color="#d03b3b", line_width=1)
-    fig.update_layout(height=520, title="Press ▶ - how each site's chemotherapy timing moved year by year",
+    fig.add_vline(x=90, line_color="#b83c3c", line_width=1)
+    fig.update_layout(height=520, margin=dict(t=30),
                       legend=dict(orientation="v", y=0.5, x=1.02, yanchor="middle"))
     return fig
 
@@ -239,15 +245,16 @@ def cost_stack(d: pd.DataFrame, dim: str) -> go.Figure:
     fig = go.Figure()
     for comp, col in (("Drug", "pct_drug"), ("Administration", "pct_administration"), ("Radiation", "pct_radiation"),
                       ("Surgery", "pct_surgery")):
-        fig.add_trace(go.Bar(y=d.dimension_value, x=d.mean_cost_usd * d[col].fillna(0) / 100, name=comp, orientation="h",
+        shown = {"Drug": "Drugs", "Administration": "Giving the drugs"}.get(comp, comp)
+        fig.add_trace(go.Bar(y=d.dimension_value, x=d.mean_cost_usd * d[col].fillna(0) / 100, name=shown, orientation="h",
                              marker=dict(color={"Drug": SERIES[0], "Administration": SERIES[1], "Radiation": SERIES[2],
                                                 "Surgery": SERIES[3]}[comp], line=RING),
-                             hovertemplate="%{y}<br>" + comp + ": <b>$%{x:,.0f}</b><extra></extra>"))
+                             hovertemplate="%{y}<br>" + shown + ": <b>$%{x:,.0f}</b><extra></extra>"))
     fig.add_trace(go.Scatter(y=d.dimension_value, x=d.mean_cost_usd, mode="text", textposition="middle right",
                              text=[f"${v / 1000:,.1f}K" for v in d.mean_cost_usd], showlegend=False, hoverinfo="skip",
                              textfont=dict(color=INK)))
     fig.update_layout(barmode="stack", height=140 + 38 * len(d), bargap=0.35, margin=dict(r=80),
-                      title=f"Mean estimated cost per patient by {dim.lower()}", xaxis_title="USD per patient",
+                      title=f"Average estimated cost per patient, by {dim.lower()}", xaxis_title="$ per patient",
                       legend_traceorder="normal")
     return fig
 
@@ -308,7 +315,7 @@ def lineage_graph(manifest_path: Path, focus: str | None = None) -> go.Figure:
         (x0, y0), (x1, y1) = pos[s], pos[t]
         ex += [x0, (x0 + x1) / 2, x1, None]
         ey += [y0, (y0 + y1) / 2, y1, None]
-    fig.add_trace(go.Scatter(x=ex, y=ey, mode="lines", line=dict(color="rgba(137,135,129,0.35)", width=1),
+    fig.add_trace(go.Scatter(x=ex, y=ey, mode="lines", line=dict(color="rgba(139,144,153,0.35)", width=1),
                              hoverinfo="skip", showlegend=False))
     for lay, uids in by_layer.items():
         fig.add_trace(go.Scatter(

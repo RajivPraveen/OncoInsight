@@ -71,7 +71,9 @@ def test_forest_colours_by_direction_and_significance(charts):
                        "hi": [2.6, 0.8, 1.5], "p": [0.001, 0.01, 0.4]})
     fig = charts.forest(df, "term", "hr", "lo", "hi", "p")
     colors = dict(zip(fig.data[0].y, fig.data[0].marker.color, strict=True))
-    assert colors["harm"] == "#d03b3b" and colors["protect"] == "#2a78d6" and colors["ns"] == "#c3c2b7"
+    import theme
+
+    assert colors == {"harm": theme.STATUS["critical"], "protect": theme.SERIES[0], "ns": theme.DE_EMPHASIS}
 
 
 @pytest.mark.skipif(not MANIFEST.exists(), reason="dbt manifest not built")
@@ -98,7 +100,9 @@ def test_forest_without_p_uses_ci_excluding_reference(charts):
                        "hi": [4.0, 1.9, 0.4]})
     fig = charts.forest(df, "site", "oe", "lo", "hi", p=None, ref=1, log=False)
     colors = dict(zip(fig.data[0].y, fig.data[0].marker.color, strict=True))
-    assert colors == {"worse": "#d03b3b", "unclear": "#c3c2b7", "better": "#2a78d6"}
+    import theme
+
+    assert colors == {"worse": theme.STATUS["critical"], "unclear": theme.DE_EMPHASIS, "better": theme.SERIES[0]}
 
 
 def test_cost_scenario_default_is_exactly_zero_and_levers_move_the_right_lines():

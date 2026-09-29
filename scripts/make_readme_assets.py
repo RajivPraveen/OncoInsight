@@ -43,20 +43,21 @@ def charts() -> None:
     save(c.sankey(steps, p, 4, 8), "sankey", h=560)
     km = q("select * from analytics.km_curves where cohort='TCGA-BRCA' and endpoint='OS' and stratifier='stage_major'")
     ks = q("select * from analytics.km_summary where cohort='TCGA-BRCA' and endpoint='OS' and stratifier='stage_major'")
-    save(c.km_from_table(km, ks, "stage_major", "Overall survival by AJCC stage - TCGA-BRCA (shaded 95% CI)"), "km_stage", h=460)
+    save(c.km_from_table(km, ks, "stage_major", "Share of patients still alive, by cancer stage"), "km_stage", h=460)
     ra = q("select * from analytics.hospital_risk_adjusted_delay").rename(columns={"hospital_name": "site"})
     save(c.forest(ra, "site", "oe_ratio", "oe_ci_lower", "oe_ci_upper", p=None, ref=1, log=False,
-                  title="Chemo started > 90 days: observed ÷ expected after case-mix adjustment (95% CI)",
-                  xtitle="observed / expected"), "oe_delay", h=420)
+                  title="Late chemotherapy starts: actual ÷ expected for each hospital's mix of patients",
+                  xtitle="actual ÷ expected  (1 = as expected)"), "oe_delay", h=420)
     co = q("select * from analytics.cox_coefficients where model like %(m)s", {"m": "TCGA PFI%"})
     save(c.forest(co, "covariate", "hazard_ratio", "ci_lower", "ci_upper",
-                  title="Progression-free interval - adjusted hazard ratios (red = higher risk, blue = lower, grey = n.s.)"),
+                  title="What raises the risk of the cancer growing or returning (red = higher, blue = lower, grey = unclear)",
+                  xtitle="risk multiplier  (1 = no effect)"),
          "cox_pfi", h=440)
     ca = q("select * from marts.mart_cost_analysis where dimension='Receptor subtype'")
-    save(c.cost_stack(ca, "receptor subtype"), "cost_subtype", h=360)
+    save(c.cost_stack(ca, "tumour type"), "cost_subtype", h=360)
     save(c.sunburst_journey(p), "sunburst", w=900, h=620)
     delay = q("select * from marts.mart_treatment_delay where interval_name = %(i)s", {"i": "Diagnosis → Chemotherapy"})
-    save(c.delay_distribution(delay, "stage_major", 90, "Days from diagnosis to adjuvant chemotherapy, by stage"), "delay_stage", h=420)
+    save(c.delay_distribution(delay, "stage_major", 90, "Days from diagnosis to chemotherapy, by cancer stage"), "delay_stage", h=420)
 
 
 SHOTS = [
@@ -64,7 +65,7 @@ SHOTS = [
     ("story", "story", None),
     ("pathways", "pathways", None),
     ("time_to_treatment", "time_to_treatment", None),
-    ("survival_lab", "survival", "preset"),
+    ("survival_lab", "survival", None),  # default example: chemo within vs. after 90 days
     ("cost_whatif", "cost", "whatif"),
     ("operations", "operations", None),
     ("lineage", "lineage", None),
@@ -81,14 +82,10 @@ def screenshots(base: str = "http://localhost:8503") -> None:
             page.goto(f"{base}/{path}", wait_until="networkidle")
             page.wait_for_selector('[data-testid="stPlotlyChart"]', timeout=60_000)
             page.wait_for_timeout(3500)
-            if action == "preset":
-                page.get_by_role("combobox", name="Start from a preset").click()
-                page.get_by_role("option", name="Triple negative vs HR+/HER2-").click()
-                page.wait_for_timeout(4000)
             if action == "whatif":
-                page.get_by_role("tab", name="What-if simulator").click()
+                page.get_by_role("tab", name="What if we changed something?").click()
                 page.wait_for_timeout(2000)
-                page.get_by_text("Hypofractionate whole-breast radiation").click()  # show a real scenario
+                page.get_by_text("Give radiation in fewer, larger doses").click()  # show a real scenario
                 page.wait_for_timeout(3500)
             page.screenshot(path=str(OUT / f"screen_{name}.jpg"), type="jpeg", quality=80)
             print("screenshot", name)

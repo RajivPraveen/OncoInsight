@@ -1,26 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="OncoInsight - breast cancer treatment and outcomes intelligence">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0d366b"/>
-      <stop offset="0.45" stop-color="#2a78d6"/>
-      <stop offset="0.8" stop-color="#4a3aa7"/>
-      <stop offset="1" stop-color="#e87ba4"/>
-    </linearGradient>
-  </defs>
-  <rect width="1200" height="300" rx="24" fill="url(#g)"/>
-  <!-- stylised patient journey: diagnosis -> surgery -> chemo -> radiation -> endocrine -> outcome -->
-  <g opacity="0.95">
-    <path d="M760 205 C 820 205, 840 150, 900 150 S 980 205, 1040 205 S 1110 150, 1150 150" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3" fill="none"/>
-    <circle cx="760" cy="205" r="13" fill="#ffffff"/>
-    <circle cx="830" cy="170" r="11" fill="#2a78d6" stroke="#fff" stroke-width="3"/>
-    <circle cx="900" cy="150" r="11" fill="#eb6834" stroke="#fff" stroke-width="3"/>
-    <circle cx="970" cy="185" r="11" fill="#1baf7a" stroke="#fff" stroke-width="3"/>
-    <circle cx="1040" cy="205" r="11" fill="#eda100" stroke="#fff" stroke-width="3"/>
-    <circle cx="1100" cy="165" r="11" fill="#e87ba4" stroke="#fff" stroke-width="3"/>
-    <circle cx="1150" cy="150" r="13" fill="#0ca30c" stroke="#fff" stroke-width="3"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260" role="img" aria-label="OncoInsight - where breast cancer patients wait too long for treatment">
+  <rect width="1200" height="260" rx="20" fill="#f7f7f5"/>
+  <rect x="0.5" y="0.5" width="1199" height="259" rx="20" fill="none" stroke="#ecebe7"/>
+  <!-- the patient journey: diagnosis, surgery, chemotherapy, hormone therapy, radiation, follow-up -->
+  <line x1="760" y1="150" x2="1130" y2="150" stroke="#ecebe7" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="760" cy="150" r="11" fill="#4b5563" stroke="#fff" stroke-width="3"/>
+  <circle cx="834" cy="150" r="11" fill="#3b6ea8" stroke="#fff" stroke-width="3"/>
+  <circle cx="908" cy="150" r="11" fill="#d0643c" stroke="#fff" stroke-width="3"/>
+  <circle cx="982" cy="150" r="11" fill="#d19a1e" stroke="#fff" stroke-width="3"/>
+  <circle cx="1056" cy="150" r="11" fill="#2f9a7e" stroke="#fff" stroke-width="3"/>
+  <circle cx="1130" cy="150" r="11" fill="#3b6ea8" stroke="#fff" stroke-width="3"/>
+  <g font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" fill="#4b5563" text-anchor="middle">
+    <text x="760" y="124">Diagnosis</text><text x="834" y="186">Surgery</text><text x="908" y="124">Chemo</text>
+    <text x="982" y="186">Hormone</text><text x="1056" y="124">Radiation</text><text x="1130" y="186">Follow-up</text>
   </g>
-  <text x="56" y="92" fill="#ffffff" fill-opacity="0.85" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="16" letter-spacing="3">BREAST CANCER TREATMENT &amp; OUTCOMES INTELLIGENCE</text>
-  <text x="54" y="160" fill="#ffffff" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="68" font-weight="700">OncoInsight</text>
-  <text x="56" y="206" fill="#ffffff" fill-opacity="0.93" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22">Measuring the whole cancer care journey on real patient data:</text>
-  <text x="56" y="238" fill="#ffffff" fill-opacity="0.93" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="22">delays · pathways · survival · recurrence · cost · equity</text>
+  <g font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif">
+    <text x="56" y="84" fill="#a8456b" font-size="14" font-weight="600" letter-spacing="3">BREAST CANCER CARE ANALYTICS</text>
+    <text x="54" y="142" fill="#1c1f24" font-size="56" font-weight="700">OncoInsight</text>
+    <text x="56" y="184" fill="#4b5563" font-size="20">Where do breast cancer patients wait too long for treatment,</text>
+    <text x="56" y="212" fill="#4b5563" font-size="20">and what does it mean for them? 1,098 real patients.</text>
+  </g>
 </svg>
